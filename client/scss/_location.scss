@@ -1,0 +1,16 @@
+img {
+  max-width: 200px;
+  border-radius: 5px;
+}
+
+ul {
+  list-style-type: none;
+}
+
+#bookmarker {
+  font-size: 1.5rem;
+  color: #a37eba;
+  &:hover {
+    cursor: pointer;
+  }
+}

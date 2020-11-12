@@ -1,0 +1,96 @@
+#login__main-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  position: relative;
+
+  & .login__form {
+    display: flex;
+    flex-direction: column;
+    min-width: 40%;
+    height: 70%;
+    margin: 0 auto;
+    margin-top: 10%;
+    background: #fff;
+    border-radius: 10px;
+    padding: 3rem;
+    border: 1px solid lightgray;
+    box-shadow: 5px 6px 18px #888888;
+
+    & .hero-text {
+      display: block;
+      border-bottom: 3px solid lightgray;
+      padding-bottom: 10px;
+    }
+
+    & label {
+      color: rgb(85, 75, 75);
+      display: block;
+      margin-top: 1rem;
+
+      &:first-of-type {
+        margin-top: 3rem;
+      }
+    }
+
+    & input {
+      // grab each input element and give them the same uniform style
+      margin-bottom: 2rem;
+      &[type="email"],
+      &[type="text"],
+      &[type="select"],
+      &[type="password"] {
+        border: 1px solid rgb(218, 191, 191);
+        border-radius: 10px;
+        padding: 0.3rem;
+        font-size: 1rem;
+      }
+
+      &[type="submit"] {
+        // knows how to use these variables because congif is the top level import of the compiled scss club file
+        background-color: $nav-container-bg;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        width: 20%;
+        padding: 0.5rem;
+
+        &:hover {
+          cursor: pointer;
+          transform: scale(1.08);
+          transition: 0.1s all ease;
+        }
+      }
+    }
+  }
+}
+
+@media all and (max-width: 768px) {
+  #login__main-container {
+    & .login__form {
+      width: 100%;
+      margin-top: 5%;
+      border: none;
+      box-shadow: none;
+
+      & input {
+        &[type="email"],
+        &[type="text"],
+        &[type="select"],
+        &[type="password"] {
+          border: none;
+          border-bottom: 1px solid rgb(218, 191, 191);
+          border-radius: 0px;
+          padding: 0.5rem;
+          font-size: 1rem;
+        }
+        &[type="submit"] {
+          width: 100%;
+          border-radius: 5px;
+          padding: 0.7rem;
+        }
+      }
+    }
+  }
+}

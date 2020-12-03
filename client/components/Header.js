@@ -1,7 +1,7 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React from 'react';
+import { Link } from 'react-router-dom';
 
-function Header() {
+const Header = () => {
   return (
     <header className="hero__image">
       <div className="hero-text">
@@ -15,6 +15,6 @@ function Header() {
       </div>
     </header>
   );
-}
+};
 
 export default Header;

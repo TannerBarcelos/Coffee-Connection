@@ -33007,7 +33007,383 @@ if ("development" !== "production") {
     style: _propTypes.default.object
   });
 }
-},{"react-router":"node_modules/react-router/esm/react-router.js","@babel/runtime/helpers/esm/inheritsLoose":"node_modules/@babel/runtime/helpers/esm/inheritsLoose.js","react":"node_modules/react/index.js","history":"node_modules/history/esm/history.js","prop-types":"node_modules/prop-types/index.js","tiny-warning":"node_modules/tiny-warning/dist/tiny-warning.esm.js","@babel/runtime/helpers/esm/extends":"node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutPropertiesLoose":"node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js","tiny-invariant":"node_modules/tiny-invariant/dist/tiny-invariant.esm.js"}],"components/Nav.js":[function(require,module,exports) {
+},{"react-router":"node_modules/react-router/esm/react-router.js","@babel/runtime/helpers/esm/inheritsLoose":"node_modules/@babel/runtime/helpers/esm/inheritsLoose.js","react":"node_modules/react/index.js","history":"node_modules/history/esm/history.js","prop-types":"node_modules/prop-types/index.js","tiny-warning":"node_modules/tiny-warning/dist/tiny-warning.esm.js","@babel/runtime/helpers/esm/extends":"node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutPropertiesLoose":"node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js","tiny-invariant":"node_modules/tiny-invariant/dist/tiny-invariant.esm.js"}],"node_modules/react-onclickoutside/dist/react-onclickoutside.es.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = exports.IGNORE_CLASS_NAME = void 0;
+
+var _react = require("react");
+
+var _reactDom = require("react-dom");
+
+function _inheritsLoose(subClass, superClass) {
+  subClass.prototype = Object.create(superClass.prototype);
+  subClass.prototype.constructor = subClass;
+  subClass.__proto__ = superClass;
+}
+
+function _objectWithoutProperties(source, excluded) {
+  if (source == null) return {};
+  var target = {};
+  var sourceKeys = Object.keys(source);
+  var key, i;
+
+  for (i = 0; i < sourceKeys.length; i++) {
+    key = sourceKeys[i];
+    if (excluded.indexOf(key) >= 0) continue;
+    target[key] = source[key];
+  }
+
+  if (Object.getOwnPropertySymbols) {
+    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+
+    for (i = 0; i < sourceSymbolKeys.length; i++) {
+      key = sourceSymbolKeys[i];
+      if (excluded.indexOf(key) >= 0) continue;
+      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+      target[key] = source[key];
+    }
+  }
+
+  return target;
+}
+/**
+ * Check whether some DOM node is our Component's node.
+ */
+
+
+function isNodeFound(current, componentNode, ignoreClass) {
+  if (current === componentNode) {
+    return true;
+  } // SVG <use/> elements do not technically reside in the rendered DOM, so
+  // they do not have classList directly, but they offer a link to their
+  // corresponding element, which can have classList. This extra check is for
+  // that case.
+  // See: http://www.w3.org/TR/SVG11/struct.html#InterfaceSVGUseElement
+  // Discussion: https://github.com/Pomax/react-onclickoutside/pull/17
+
+
+  if (current.correspondingElement) {
+    return current.correspondingElement.classList.contains(ignoreClass);
+  }
+
+  return current.classList.contains(ignoreClass);
+}
+/**
+ * Try to find our node in a hierarchy of nodes, returning the document
+ * node as highest node if our node is not found in the path up.
+ */
+
+
+function findHighest(current, componentNode, ignoreClass) {
+  if (current === componentNode) {
+    return true;
+  } // If source=local then this event came from 'somewhere'
+  // inside and should be ignored. We could handle this with
+  // a layered approach, too, but that requires going back to
+  // thinking in terms of Dom node nesting, running counter
+  // to React's 'you shouldn't care about the DOM' philosophy.
+
+
+  while (current.parentNode) {
+    if (isNodeFound(current, componentNode, ignoreClass)) {
+      return true;
+    }
+
+    current = current.parentNode;
+  }
+
+  return current;
+}
+/**
+ * Check if the browser scrollbar was clicked
+ */
+
+
+function clickedScrollbar(evt) {
+  return document.documentElement.clientWidth <= evt.clientX || document.documentElement.clientHeight <= evt.clientY;
+} // ideally will get replaced with external dep
+// when rafrex/detect-passive-events#4 and rafrex/detect-passive-events#5 get merged in
+
+
+var testPassiveEventSupport = function testPassiveEventSupport() {
+  if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') {
+    return;
+  }
+
+  var passive = false;
+  var options = Object.defineProperty({}, 'passive', {
+    get: function get() {
+      passive = true;
+    }
+  });
+
+  var noop = function noop() {};
+
+  window.addEventListener('testPassiveEventSupport', noop, options);
+  window.removeEventListener('testPassiveEventSupport', noop, options);
+  return passive;
+};
+
+function autoInc(seed) {
+  if (seed === void 0) {
+    seed = 0;
+  }
+
+  return function () {
+    return ++seed;
+  };
+}
+
+var uid = autoInc();
+var passiveEventSupport;
+var handlersMap = {};
+var enabledInstances = {};
+var touchEvents = ['touchstart', 'touchmove'];
+var IGNORE_CLASS_NAME = 'ignore-react-onclickoutside';
+/**
+ * Options for addEventHandler and removeEventHandler
+ */
+
+exports.IGNORE_CLASS_NAME = IGNORE_CLASS_NAME;
+
+function getEventHandlerOptions(instance, eventName) {
+  var handlerOptions = null;
+  var isTouchEvent = touchEvents.indexOf(eventName) !== -1;
+
+  if (isTouchEvent && passiveEventSupport) {
+    handlerOptions = {
+      passive: !instance.props.preventDefault
+    };
+  }
+
+  return handlerOptions;
+}
+/**
+ * This function generates the HOC function that you'll use
+ * in order to impart onOutsideClick listening to an
+ * arbitrary component. It gets called at the end of the
+ * bootstrapping code to yield an instance of the
+ * onClickOutsideHOC function defined inside setupHOC().
+ */
+
+
+function onClickOutsideHOC(WrappedComponent, config) {
+  var _class, _temp;
+
+  var componentName = WrappedComponent.displayName || WrappedComponent.name || 'Component';
+  return _temp = _class = /*#__PURE__*/function (_Component) {
+    _inheritsLoose(onClickOutside, _Component);
+
+    function onClickOutside(props) {
+      var _this;
+
+      _this = _Component.call(this, props) || this;
+
+      _this.__outsideClickHandler = function (event) {
+        if (typeof _this.__clickOutsideHandlerProp === 'function') {
+          _this.__clickOutsideHandlerProp(event);
+
+          return;
+        }
+
+        var instance = _this.getInstance();
+
+        if (typeof instance.props.handleClickOutside === 'function') {
+          instance.props.handleClickOutside(event);
+          return;
+        }
+
+        if (typeof instance.handleClickOutside === 'function') {
+          instance.handleClickOutside(event);
+          return;
+        }
+
+        throw new Error("WrappedComponent: " + componentName + " lacks a handleClickOutside(event) function for processing outside click events.");
+      };
+
+      _this.__getComponentNode = function () {
+        var instance = _this.getInstance();
+
+        if (config && typeof config.setClickOutsideRef === 'function') {
+          return config.setClickOutsideRef()(instance);
+        }
+
+        if (typeof instance.setClickOutsideRef === 'function') {
+          return instance.setClickOutsideRef();
+        }
+
+        return (0, _reactDom.findDOMNode)(instance);
+      };
+
+      _this.enableOnClickOutside = function () {
+        if (typeof document === 'undefined' || enabledInstances[_this._uid]) {
+          return;
+        }
+
+        if (typeof passiveEventSupport === 'undefined') {
+          passiveEventSupport = testPassiveEventSupport();
+        }
+
+        enabledInstances[_this._uid] = true;
+        var events = _this.props.eventTypes;
+
+        if (!events.forEach) {
+          events = [events];
+        }
+
+        handlersMap[_this._uid] = function (event) {
+          if (_this.componentNode === null) return;
+
+          if (_this.props.preventDefault) {
+            event.preventDefault();
+          }
+
+          if (_this.props.stopPropagation) {
+            event.stopPropagation();
+          }
+
+          if (_this.props.excludeScrollbar && clickedScrollbar(event)) return;
+          var current = event.target;
+
+          if (findHighest(current, _this.componentNode, _this.props.outsideClickIgnoreClass) !== document) {
+            return;
+          }
+
+          _this.__outsideClickHandler(event);
+        };
+
+        events.forEach(function (eventName) {
+          document.addEventListener(eventName, handlersMap[_this._uid], getEventHandlerOptions(_this, eventName));
+        });
+      };
+
+      _this.disableOnClickOutside = function () {
+        delete enabledInstances[_this._uid];
+        var fn = handlersMap[_this._uid];
+
+        if (fn && typeof document !== 'undefined') {
+          var events = _this.props.eventTypes;
+
+          if (!events.forEach) {
+            events = [events];
+          }
+
+          events.forEach(function (eventName) {
+            return document.removeEventListener(eventName, fn, getEventHandlerOptions(_this, eventName));
+          });
+          delete handlersMap[_this._uid];
+        }
+      };
+
+      _this.getRef = function (ref) {
+        return _this.instanceRef = ref;
+      };
+
+      _this._uid = uid();
+      return _this;
+    }
+    /**
+     * Access the WrappedComponent's instance.
+     */
+
+
+    var _proto = onClickOutside.prototype;
+
+    _proto.getInstance = function getInstance() {
+      if (!WrappedComponent.prototype.isReactComponent) {
+        return this;
+      }
+
+      var ref = this.instanceRef;
+      return ref.getInstance ? ref.getInstance() : ref;
+    };
+    /**
+     * Add click listeners to the current document,
+     * linked to this component's state.
+     */
+
+
+    _proto.componentDidMount = function componentDidMount() {
+      // If we are in an environment without a DOM such
+      // as shallow rendering or snapshots then we exit
+      // early to prevent any unhandled errors being thrown.
+      if (typeof document === 'undefined' || !document.createElement) {
+        return;
+      }
+
+      var instance = this.getInstance();
+
+      if (config && typeof config.handleClickOutside === 'function') {
+        this.__clickOutsideHandlerProp = config.handleClickOutside(instance);
+
+        if (typeof this.__clickOutsideHandlerProp !== 'function') {
+          throw new Error("WrappedComponent: " + componentName + " lacks a function for processing outside click events specified by the handleClickOutside config option.");
+        }
+      }
+
+      this.componentNode = this.__getComponentNode(); // return early so we dont initiate onClickOutside
+
+      if (this.props.disableOnClickOutside) return;
+      this.enableOnClickOutside();
+    };
+
+    _proto.componentDidUpdate = function componentDidUpdate() {
+      this.componentNode = this.__getComponentNode();
+    };
+    /**
+     * Remove all document's event listeners for this component
+     */
+
+
+    _proto.componentWillUnmount = function componentWillUnmount() {
+      this.disableOnClickOutside();
+    };
+    /**
+     * Can be called to explicitly enable event listening
+     * for clicks and touches outside of this element.
+     */
+
+    /**
+     * Pass-through render
+     */
+
+
+    _proto.render = function render() {
+      // eslint-disable-next-line no-unused-vars
+      var _props = this.props,
+          excludeScrollbar = _props.excludeScrollbar,
+          props = _objectWithoutProperties(_props, ["excludeScrollbar"]);
+
+      if (WrappedComponent.prototype.isReactComponent) {
+        props.ref = this.getRef;
+      } else {
+        props.wrappedRef = this.getRef;
+      }
+
+      props.disableOnClickOutside = this.disableOnClickOutside;
+      props.enableOnClickOutside = this.enableOnClickOutside;
+      return (0, _react.createElement)(WrappedComponent, props);
+    };
+
+    return onClickOutside;
+  }(_react.Component), _class.displayName = "OnClickOutside(" + componentName + ")", _class.defaultProps = {
+    eventTypes: ['mousedown', 'touchstart'],
+    excludeScrollbar: config && config.excludeScrollbar || false,
+    outsideClickIgnoreClass: IGNORE_CLASS_NAME,
+    preventDefault: false,
+    stopPropagation: false
+  }, _class.getClass = function () {
+    return WrappedComponent.getClass ? WrappedComponent.getClass() : WrappedComponent;
+  }, _temp;
+}
+
+var _default = onClickOutsideHOC;
+exports.default = _default;
+},{"react":"node_modules/react/index.js","react-dom":"node_modules/react-dom/index.js"}],"components/Nav.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33018,6 +33394,10 @@ exports.default = void 0;
 var _react = _interopRequireWildcard(require("react"));
 
 var _reactRouterDom = require("react-router-dom");
+
+var _reactOnclickoutside = _interopRequireDefault(require("react-onclickoutside"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
 
@@ -33035,7 +33415,8 @@ function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-function Nav(_ref) {
+// see on github
+var Nav = function Nav(_ref) {
   var userAgent = _ref.userAgent,
       setUser = _ref.setUser;
 
@@ -33043,6 +33424,10 @@ function Nav(_ref) {
       _useState2 = _slicedToArray(_useState, 2),
       open = _useState2[0],
       setOpen = _useState2[1];
+
+  Nav.handleClickOutside = function () {
+    return setOpen(false);
+  };
 
   function logOutToggler() {
     setUser('guest', false, null); // set auth state to false and the role back to guest
@@ -33058,7 +33443,7 @@ function Nav(_ref) {
     });
   }
 
-  if (userAgent === "guest") {
+  if (userAgent === 'guest') {
     return /*#__PURE__*/_react.default.createElement("nav", {
       className: "navbar"
     }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.NavLink, {
@@ -33069,41 +33454,53 @@ function Nav(_ref) {
     })), /*#__PURE__*/_react.default.createElement("ul", {
       className: "nav-links",
       style: {
-        transform: open ? "translateX(0px)" : ""
+        transform: open ? 'translateX(0px)' : ''
       }
     }, /*#__PURE__*/_react.default.createElement("li", {
       className: "nav-li"
     }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.NavLink, {
       to: "/",
-      className: "nav-link"
+      className: "nav-link",
+      onClick: function onClick() {
+        return setOpen(!open);
+      }
     }, "Home")), /*#__PURE__*/_react.default.createElement("li", {
       className: "nav-li"
     }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.NavLink, {
       to: "/locations",
-      className: "nav-link"
+      className: "nav-link",
+      onClick: function onClick() {
+        return setOpen(!open);
+      }
     }, "Find")), /*#__PURE__*/_react.default.createElement("li", {
       className: "nav-li"
     }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.NavLink, {
       to: "/login",
-      className: "nav-link"
+      className: "nav-link",
+      onClick: function onClick() {
+        return setOpen(!open);
+      }
     }, "Login")), /*#__PURE__*/_react.default.createElement("li", {
       className: "nav-li"
     }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.NavLink, {
       to: "/register",
-      className: "nav-link"
+      className: "nav-link",
+      onClick: function onClick() {
+        return setOpen(!open);
+      }
     }, "Register"))), /*#__PURE__*/_react.default.createElement("i", {
       className: "fas fa-bars burger",
       onClick: function onClick() {
         return setOpen(!open);
       }
     }));
-  } else if (userAgent === "member") {
+  } else if (userAgent === 'member') {
     return /*#__PURE__*/_react.default.createElement("nav", {
       className: "navbar"
     }, /*#__PURE__*/_react.default.createElement("ul", {
       className: "nav-links",
       style: {
-        transform: open ? "translateX(0px)" : ""
+        transform: open ? 'translateX(0px)' : ''
       }
     }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.NavLink, {
       to: "/",
@@ -33114,17 +33511,26 @@ function Nav(_ref) {
       className: "nav-li"
     }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.NavLink, {
       to: "/",
-      className: "nav-link"
+      className: "nav-link",
+      onClick: function onClick() {
+        return setOpen(!open);
+      }
     }, "Home")), /*#__PURE__*/_react.default.createElement("li", {
       className: "nav-li"
     }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.NavLink, {
       to: "/locations",
-      className: "nav-link"
+      className: "nav-link",
+      onClick: function onClick() {
+        return setOpen(!open);
+      }
     }, "Find")), /*#__PURE__*/_react.default.createElement("li", {
       className: "nav-li"
     }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.NavLink, {
       to: "/profile",
-      className: "nav-link"
+      className: "nav-link",
+      onClick: function onClick() {
+        return setOpen(!open);
+      }
     }, "Profile")), /*#__PURE__*/_react.default.createElement("li", {
       className: "nav-li",
       onClick: function onClick() {
@@ -33139,7 +33545,7 @@ function Nav(_ref) {
         return setOpen(!open);
       }
     }));
-  } else if (userAgent === "admin") {
+  } else if (userAgent === 'admin') {
     return /*#__PURE__*/_react.default.createElement("nav", {
       className: "navbar"
     }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.NavLink, {
@@ -33150,28 +33556,40 @@ function Nav(_ref) {
     })), /*#__PURE__*/_react.default.createElement("ul", {
       className: "nav-links",
       style: {
-        transform: open ? "translateX(0px)" : ""
+        transform: open ? 'translateX(0px)' : ''
       }
     }, /*#__PURE__*/_react.default.createElement("li", {
       className: "nav-li"
     }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.NavLink, {
       to: "/",
-      className: "nav-link"
+      className: "nav-link",
+      onClick: function onClick() {
+        return setOpen(!open);
+      }
     }, "Home")), /*#__PURE__*/_react.default.createElement("li", {
       className: "nav-li"
     }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.NavLink, {
       to: "/locations",
-      className: "nav-link"
+      className: "nav-link",
+      onClick: function onClick() {
+        return setOpen(!open);
+      }
     }, "Find")), /*#__PURE__*/_react.default.createElement("li", {
       className: "nav-li"
     }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.NavLink, {
       to: "/dashboard",
-      className: "nav-link"
+      className: "nav-link",
+      onClick: function onClick() {
+        return setOpen(!open);
+      }
     }, "Dashboard")), /*#__PURE__*/_react.default.createElement("li", {
       className: "nav-li"
     }, /*#__PURE__*/_react.default.createElement(_reactRouterDom.NavLink, {
       to: "/profile",
-      className: "nav-link"
+      className: "nav-link",
+      onClick: function onClick() {
+        return setOpen(!open);
+      }
     }, "Profile")), /*#__PURE__*/_react.default.createElement("li", {
       className: "nav-li",
       onClick: function onClick() {
@@ -33187,11 +33605,18 @@ function Nav(_ref) {
       }
     }));
   }
-}
+};
 
-var _default = Nav;
+var clickOutsideConfig = {
+  handleClickOutside: function handleClickOutside() {
+    return Nav.handleClickOutside;
+  }
+};
+
+var _default = (0, _reactOnclickoutside.default)(Nav, clickOutsideConfig);
+
 exports.default = _default;
-},{"react":"node_modules/react/index.js","react-router-dom":"node_modules/react-router-dom/esm/react-router-dom.js"}],"components/Header.js":[function(require,module,exports) {
+},{"react":"node_modules/react/index.js","react-router-dom":"node_modules/react-router-dom/esm/react-router-dom.js","react-onclickoutside":"node_modules/react-onclickoutside/dist/react-onclickoutside.es.js"}],"components/Header.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33205,7 +33630,7 @@ var _reactRouterDom = require("react-router-dom");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function Header() {
+var Header = function Header() {
   return /*#__PURE__*/_react.default.createElement("header", {
     className: "hero__image"
   }, /*#__PURE__*/_react.default.createElement("div", {
@@ -33218,7 +33643,7 @@ function Header() {
     to: "/locations",
     className: "search__link"
   }, "Search Coffee Shops")));
-}
+};
 
 var _default = Header;
 exports.default = _default;
@@ -33254,31 +33679,31 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 // Components
 // images
-function Home() {
+var Home = function Home() {
   return /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_Header.default, null), /*#__PURE__*/_react.default.createElement("div", {
     className: "container"
   }, /*#__PURE__*/_react.default.createElement("section", {
     className: "section__content card"
   }, /*#__PURE__*/_react.default.createElement("p", null, "Search for coffee shops in any location"), /*#__PURE__*/_react.default.createElement("img", {
     src: _compas.default,
-    alt: "compas"
+    alt: 'compas'
   })), /*#__PURE__*/_react.default.createElement("section", {
     className: "section__content card"
   }, /*#__PURE__*/_react.default.createElement("img", {
     src: _fav_shop.default,
-    alt: "favorite shop"
+    alt: 'favorite shop'
   }), /*#__PURE__*/_react.default.createElement("p", null, "Favorite the shop and have it saved to your own profile")), /*#__PURE__*/_react.default.createElement("section", {
     className: "section__content card"
   }, /*#__PURE__*/_react.default.createElement("p", null, "Learn more about the coffee shop before you visit to save yourself the time"), /*#__PURE__*/_react.default.createElement("img", {
     src: _learn.default,
-    alt: "learn"
+    alt: 'learn'
   })), /*#__PURE__*/_react.default.createElement("section", {
     className: "section__content card"
   }, /*#__PURE__*/_react.default.createElement("img", {
     src: _yelp.default,
-    alt: "yelp"
+    alt: 'yelp'
   }), /*#__PURE__*/_react.default.createElement("p", null, "Connects to Yelp! so you can get reviews fast"))));
-}
+};
 
 var _default = Home;
 exports.default = _default;
@@ -33294,14 +33719,14 @@ var _react = _interopRequireDefault(require("react"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function Spinner() {
+var Spinner = function Spinner() {
   return /*#__PURE__*/_react.default.createElement("div", {
     className: "ui active centered inline loader",
     style: {
-      fontSize: "1.5rem"
+      fontSize: '1.5rem'
     }
   });
-}
+};
 
 var _default = Spinner;
 exports.default = _default;
@@ -33322,7 +33747,7 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
 // generates the amount of stars to show for the rating for each shop
-function renderStars(len) {
+var renderStars = function renderStars(len) {
   if (len < 1) {
     return null;
   }
@@ -33334,13 +33759,13 @@ function renderStars(len) {
       key: i,
       className: "fas fa-star",
       style: {
-        color: "#a37eba"
+        color: '#a37eba'
       }
     }));
   }
 
   return stars;
-} // For the logged in user, send the clicked item and its data to the server
+}; // For the logged in user, send the clicked item and its data to the server
 // to essentially post that shop to the DB
 
 
@@ -33398,29 +33823,29 @@ function LocationItem(_ref) {
   return /*#__PURE__*/_react.default.createElement("div", {
     className: "ui card",
     style: {
-      width: "400px",
-      height: "470px",
-      marginTop: "none"
+      width: '400px',
+      height: '470px',
+      marginTop: 'none'
     }
   }, /*#__PURE__*/_react.default.createElement("div", {
     style: {
-      width: "100%",
-      height: "280px",
-      textAlign: "center",
-      marginBottom: "1rem"
+      width: '100%',
+      height: '280px',
+      textAlign: 'center',
+      marginBottom: '1rem'
     }
   }, /*#__PURE__*/_react.default.createElement("img", {
     src: image_url,
     style: {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-      marginTop: "1rem"
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+      marginTop: '1rem'
     }
   })), /*#__PURE__*/_react.default.createElement("div", {
     className: "content",
     style: {
-      marginTop: "1rem"
+      marginTop: '1rem'
     }
   }, isAuthenticated ? /*#__PURE__*/_react.default.createElement("div", {
     className: "tooltip__icon__container",
@@ -33441,8 +33866,8 @@ function LocationItem(_ref) {
     className: "fas fa-bookmark",
     id: "bookmarker",
     style: {
-      fontSize: "1.6rem",
-      color: "#a37dba"
+      fontSize: '1.6rem',
+      color: '#a37dba'
     }
   })) : null, /*#__PURE__*/_react.default.createElement("div", {
     className: "header"
@@ -33451,7 +33876,7 @@ function LocationItem(_ref) {
   }, /*#__PURE__*/_react.default.createElement("span", {
     className: "right floated",
     style: {
-      marginTop: ".7rem"
+      marginTop: '.7rem'
     }
   }, renderStars(Math.ceil(rating)).map(function (star) {
     return star;
@@ -33459,11 +33884,11 @@ function LocationItem(_ref) {
     href: url,
     target: "_blank",
     className: "ui google plus button"
-  }, "See on Yelp! ", /*#__PURE__*/_react.default.createElement("i", {
+  }, "See on Yelp!", ' ', /*#__PURE__*/_react.default.createElement("i", {
     className: "fab fa-yelp",
     style: {
-      fontSize: "1.3rem",
-      color: "#fff"
+      fontSize: '1.3rem',
+      color: '#fff'
     }
   }))));
 }
@@ -33484,7 +33909,7 @@ var _LocationItem = _interopRequireDefault(require("./LocationItem"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function Shops(_ref) {
+var Shops = function Shops(_ref) {
   var locations = _ref.locations,
       isAuthenticated = _ref.isAuthenticated,
       userInformation = _ref.userInformation;
@@ -33504,7 +33929,7 @@ function Shops(_ref) {
       userInformation: userInformation
     });
   });
-}
+};
 
 var _default = Shops;
 exports.default = _default;
@@ -33806,6 +34231,7 @@ var _utils = require("./utils");
 Object.keys(_utils).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
   if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _utils[key]) return;
   Object.defineProperty(exports, key, {
     enumerable: true,
     get: function () {
@@ -45478,6 +45904,7 @@ var _factories = require("./factories");
 Object.keys(_factories).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
   if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _factories[key]) return;
   Object.defineProperty(exports, key, {
     enumerable: true,
     get: function () {
@@ -65318,6 +65745,7 @@ var _index = require("./modifiers/index.js");
 Object.keys(_index).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
   if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _index[key]) return;
   Object.defineProperty(exports, key, {
     enumerable: true,
     get: function () {
@@ -65384,6 +65812,7 @@ var _enums = require("./enums.js");
 Object.keys(_enums).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
   if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _enums[key]) return;
   Object.defineProperty(exports, key, {
     enumerable: true,
     get: function () {
@@ -65397,6 +65826,7 @@ var _index = require("./modifiers/index.js");
 Object.keys(_index).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
   if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _index[key]) return;
   Object.defineProperty(exports, key, {
     enumerable: true,
     get: function () {
@@ -70287,6 +70717,7 @@ var _types = require("./types");
 Object.keys(_types).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
   if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _types[key]) return;
   Object.defineProperty(exports, key, {
     enumerable: true,
     get: function () {
@@ -75627,7 +76058,7 @@ var filterOptions = [{
   value: 'By Distance'
 }];
 
-function FilterShops(_ref) {
+var FilterShops = function FilterShops(_ref) {
   var filter = _ref.filter;
   return /*#__PURE__*/_react.default.createElement(_semanticUiReact.Dropdown, {
     className: "filterable",
@@ -75639,11 +76070,11 @@ function FilterShops(_ref) {
       return filter(e.target.textContent);
     },
     style: {
-      marginTop: "1.5rem",
-      marginBottom: "2rem"
+      marginTop: '1.5rem',
+      marginBottom: '2rem'
     }
   });
-}
+};
 
 var _default = FilterShops;
 exports.default = _default;
@@ -75811,12 +76242,11 @@ function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-function Locations(_ref) {
+var Locations = function Locations(_ref) {
   var isAuthenticated = _ref.isAuthenticated,
       userInformation = _ref.userInformation;
-  console.log(userInformation); // hooks
 
-  var _useState = (0, _react.useState)(""),
+  var _useState = (0, _react.useState)(''),
       _useState2 = _slicedToArray(_useState, 2),
       cityEntry = _useState2[0],
       setCityEntry = _useState2[1];
@@ -75826,58 +76256,54 @@ function Locations(_ref) {
       locations = _useState4[0],
       setLocations = _useState4[1];
 
-  var _useState5 = (0, _react.useState)(""),
+  var _useState5 = (0, _react.useState)(''),
       _useState6 = _slicedToArray(_useState5, 2),
       coords = _useState6[0],
       setCoords = _useState6[1]; // gets user geo-location for initial render (will only run once)
-  // this is asyncronous so it will take some time
 
 
   (0, _react.useEffect)(function () {
+    console.log('init render');
     navigator.geolocation.getCurrentPosition(function (pos) {
       setCoords(pos);
     }, function (err) {
       return console.log(err);
     });
-  }, []); // this will handle the actual API call and server requests - determines if the coordinates
-  // are in lat/lon (geo api request) or search input (string input) - think this is really cool
-  // and clever
+  }, []); // Whenever the coords state changes (new geo find or user input) , i want to send an API request which will
+  // get the locations based off the query and then update the locations state which would then cause another re-render which would then
+  // show in the UI the updated locations in real time
 
   (0, _react.useEffect)(function () {
     if (coords) {
       switch (_typeof(coords)) {
-        case "object":
+        case 'object':
           (0, _queryGeoLocation.default)(coords, setLocations);
 
-        case "string":
+        case 'string':
           (0, _queryUserInputLocation.default)(coords, setLocations);
           break;
 
         default:
-          console.log("error in request");
+          console.log('error in request');
       }
     }
-  }, [coords]); // only re-run when coords change
+  }, [coords]); // if user presses button
 
-  (0, _react.useEffect)(function () {
-    displayShops();
-  }, [locations]); // if user presses button
-
-  function onSubmit() {
+  var onSubmit = function onSubmit() {
     setCoords(cityEntry);
-  } // if user presses enter - submit request
+  }; // if user presses enter - submit request
 
 
-  function onFormSubmit(e) {
+  var onFormSubmit = function onFormSubmit(event) {
     e.preventDefault();
     setCoords(cityEntry);
-  }
+  };
 
-  function convertToMiles(meterValue) {
+  var convertToMiles = function convertToMiles(meterValue) {
     return meterValue / 1609;
-  }
+  };
 
-  function sortBySelection(selection) {
+  var sortBySelection = function sortBySelection(selection) {
     switch (selection) {
       case 'High to Low':
         setLocations(_toConsumableArray(locations.sort(function (shopA, shopB) {
@@ -75911,11 +76337,12 @@ function Locations(_ref) {
           return (a.distance / 1609).toFixed(3) - (b.distance / 1609).toFixed(3);
         });
         break;
-        return;
     }
-  }
 
-  function displayShops() {
+    return; // if the default is hit
+  };
+
+  var displayShops = function displayShops() {
     if (!locations || locations.length === 0) {
       return null;
     } else {
@@ -75927,7 +76354,7 @@ function Locations(_ref) {
         userInformation: userInformation
       }));
     }
-  }
+  };
 
   return /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement("header", {
     className: "hero__image"
@@ -75959,7 +76386,7 @@ function Locations(_ref) {
   })))), /*#__PURE__*/_react.default.createElement("div", {
     className: "container"
   }, !locations ? /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement(_Spinner.default, null)) : displayShops()));
-}
+};
 
 var _default = Locations;
 exports.default = _default;
@@ -75977,21 +76404,21 @@ var _semanticUiReact = require("semantic-ui-react");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function MessagePopup(_ref) {
+var MessagePopup = function MessagePopup(_ref) {
   var msg = _ref.msg;
   var msgMap = {
-    'red': /*#__PURE__*/_react.default.createElement(_semanticUiReact.Message, {
+    red: /*#__PURE__*/_react.default.createElement(_semanticUiReact.Message, {
       color: "red"
     }, msg.msg),
-    'green': /*#__PURE__*/_react.default.createElement(_semanticUiReact.Message, {
+    green: /*#__PURE__*/_react.default.createElement(_semanticUiReact.Message, {
       color: "green"
     }, msg.msg),
-    'teal': /*#__PURE__*/_react.default.createElement(_semanticUiReact.Message, {
+    teal: /*#__PURE__*/_react.default.createElement(_semanticUiReact.Message, {
       color: "teal"
     }, msg.msg)
   };
   return msgMap[msg.color];
-}
+};
 
 var _default = MessagePopup;
 exports.default = _default;
@@ -76037,7 +76464,7 @@ function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-function Login(_ref) {
+var Login = function Login(_ref) {
   var setUser = _ref.setUser;
   var history = (0, _reactRouter.useHistory)(); // need to add useEffect hook for login error stuff (see errors in console on failed login)
 
@@ -76094,7 +76521,7 @@ function Login(_ref) {
 
               if (info.isAuthenticated) {
                 setPopup({
-                  msg: info.msg + "!",
+                  msg: info.msg + '!',
                   color: 'green'
                 }); // simulates a load (will keep the logged in message above present for 1.5 seconds)
 
@@ -76108,7 +76535,7 @@ function Login(_ref) {
                 setPopup({
                   msg: info.msg,
                   color: 'red'
-                }); // after 5 seconds, 'remove' it 
+                }); // after 5 seconds, 'remove' it
 
                 setTimeout(function () {
                   return setPopup(null);
@@ -76169,7 +76596,7 @@ function Login(_ref) {
     type: "submit",
     value: "Submit"
   })));
-}
+};
 
 var _default = Login;
 exports.default = _default;
@@ -76197,12 +76624,6 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -76215,29 +76636,42 @@ function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-function Register(_ref) {
+var Register = function Register(_ref) {
   var setUser = _ref.setUser;
-  var history = (0, _reactRouter.useHistory)();
+  var history = (0, _reactRouter.useHistory)(); // best practice: use N use states instead of one use state with an object
 
-  var _useState = (0, _react.useState)({
-    username: '',
-    email_input: '',
-    password_input: ''
-  }),
+  var _useState = (0, _react.useState)(''),
       _useState2 = _slicedToArray(_useState, 2),
-      state = _useState2[0],
-      setState = _useState2[1];
+      userName = _useState2[0],
+      setUserName = _useState2[1];
 
-  var _useState3 = (0, _react.useState)(null),
+  var _useState3 = (0, _react.useState)(''),
       _useState4 = _slicedToArray(_useState3, 2),
-      popup = _useState4[0],
-      setPopup = _useState4[1]; // error state for bad registration popups
-  // handle input changes
+      email = _useState4[0],
+      setEmail = _useState4[1];
+
+  var _useState5 = (0, _react.useState)(''),
+      _useState6 = _slicedToArray(_useState5, 2),
+      password = _useState6[0],
+      setPassword = _useState6[1];
+
+  var _useState7 = (0, _react.useState)(null),
+      _useState8 = _slicedToArray(_useState7, 2),
+      popup = _useState8[0],
+      setPopup = _useState8[1]; // error state for bad registration popups
 
 
-  function onChange(e) {
-    setState(_objectSpread(_objectSpread({}, state), {}, _defineProperty({}, e.target.name, e.target.value)));
-  } // submits the request to the backend for registration
+  var onUsernameChange = function onUsernameChange(e) {
+    setUserName(e.target.value);
+  };
+
+  var onEmailChange = function onEmailChange(e) {
+    setEmail(e.target.value);
+  };
+
+  var onPasswordChange = function onPasswordChange(e) {
+    setPassword(e.target.value);
+  }; // submits the request to the backend for registration
 
 
   function onFormSubmit(_x) {
@@ -76260,9 +76694,9 @@ function Register(_ref) {
                   'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                  username: state.username,
-                  password: state.password_input,
-                  email: state.email_input
+                  username: username,
+                  password: password,
+                  email: email
                 })
               });
 
@@ -76283,7 +76717,7 @@ function Register(_ref) {
                 setPopup({
                   msg: info.msg,
                   color: 'red'
-                }); // after 5 seconds, 'remove' it 
+                }); // after 3 seconds, 'remove' it (setting the state to null will mean it does not exist whiich means it wont conditionally render the component in the UI)
 
                 setTimeout(function () {
                   return setPopup(null);
@@ -76325,31 +76759,31 @@ function Register(_ref) {
   }, "Full Name"), /*#__PURE__*/_react.default.createElement("input", {
     type: "text",
     name: "username",
-    value: state.username,
+    value: userName,
     id: "user_name",
-    onChange: onChange
+    onChange: onUsernameChange
   }), /*#__PURE__*/_react.default.createElement("label", {
     htmlFor: "email"
   }, "Email"), /*#__PURE__*/_react.default.createElement("input", {
     type: "email",
     name: "email_input",
-    value: state.email_input,
+    value: email,
     id: "email",
-    onChange: onChange
+    onChange: onEmailChange
   }), /*#__PURE__*/_react.default.createElement("label", {
     htmlFor: "password"
   }, "Password"), /*#__PURE__*/_react.default.createElement("input", {
     type: "password",
     name: "password_input",
-    value: state.password_input,
+    value: password,
     id: "password",
-    onChange: onChange
+    onChange: onPasswordChange
   }), /*#__PURE__*/_react.default.createElement("input", {
     type: "submit",
     value: "Submit",
     id: "submit_btn"
   })));
-}
+};
 
 var _default = Register;
 exports.default = _default;
@@ -76363,9 +76797,11 @@ exports.default = void 0;
 
 var _react = _interopRequireDefault(require("react"));
 
+var _this = void 0;
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function renderStars(len) {
+var renderStars = function renderStars(len) {
   if (len < 1) {
     return null;
   }
@@ -76377,43 +76813,43 @@ function renderStars(len) {
       key: i,
       className: "fas fa-star",
       style: {
-        color: "#a37eba"
+        color: '#a37eba'
       }
     }));
   }
 
   return stars;
-}
+};
 
-function BookmarkItem(_ref) {
+var BookmarkItem = function BookmarkItem(_ref) {
   var shop = _ref.shop,
       removeBookmark = _ref.removeBookmark;
   return /*#__PURE__*/_react.default.createElement("div", {
     className: "ui card",
     style: {
-      width: "400px",
-      height: "470px",
-      marginTop: "none"
+      width: '400px',
+      height: '470px',
+      marginTop: 'none'
     }
   }, /*#__PURE__*/_react.default.createElement("div", {
     style: {
-      width: "100%",
-      height: "280px",
-      textAlign: "center",
-      marginBottom: "1rem"
+      width: '100%',
+      height: '280px',
+      textAlign: 'center',
+      marginBottom: '1rem'
     }
   }, /*#__PURE__*/_react.default.createElement("img", {
     src: shop.imageURL,
     style: {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-      marginTop: "1rem"
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+      marginTop: '1rem'
     }
   })), /*#__PURE__*/_react.default.createElement("div", {
     className: "content",
     style: {
-      marginTop: "1rem"
+      marginTop: '1rem'
     }
   }, /*#__PURE__*/_react.default.createElement("i", {
     className: "fas fa-trash-alt trashbin",
@@ -76424,7 +76860,7 @@ function BookmarkItem(_ref) {
       top: '.8rem',
       right: '0'
     },
-    onClick: removeBookmark.bind(this, shop.shopID)
+    onClick: removeBookmark.bind(_this, shop.shopID)
   }), /*#__PURE__*/_react.default.createElement("div", {
     className: "header"
   }, shop.name), /*#__PURE__*/_react.default.createElement("div", null, shop.address)), /*#__PURE__*/_react.default.createElement("div", {
@@ -76432,7 +76868,7 @@ function BookmarkItem(_ref) {
   }, /*#__PURE__*/_react.default.createElement("span", {
     className: "right floated",
     style: {
-      marginTop: ".7rem"
+      marginTop: '.7rem'
     }
   }, renderStars(Math.ceil(shop.rating)).map(function (star) {
     return star;
@@ -76440,14 +76876,14 @@ function BookmarkItem(_ref) {
     href: shop.url,
     target: "_blank",
     className: "ui google plus button"
-  }, "See on Yelp! ", /*#__PURE__*/_react.default.createElement("i", {
+  }, "See on Yelp!", ' ', /*#__PURE__*/_react.default.createElement("i", {
     className: "fab fa-yelp",
     style: {
-      fontSize: "1.3rem",
-      color: "#fff"
+      fontSize: '1.3rem',
+      color: '#fff'
     }
   }))));
-}
+};
 
 var _default = BookmarkItem;
 exports.default = _default;
@@ -76479,7 +76915,7 @@ var filterOptions = [{
   value: 'Alphabetically'
 }];
 
-function FilterBookmarks(_ref) {
+var FilterBookmarks = function FilterBookmarks(_ref) {
   var filter = _ref.filter;
   return /*#__PURE__*/_react.default.createElement(_semanticUiReact.Dropdown, {
     className: "filterable",
@@ -76491,11 +76927,11 @@ function FilterBookmarks(_ref) {
       return filter(e.target.textContent);
     },
     style: {
-      marginTop: "1.5rem",
-      marginBottom: "2rem"
+      marginTop: '1.5rem',
+      marginBottom: '2rem'
     }
   });
-}
+};
 
 var _default = FilterBookmarks;
 exports.default = _default;
@@ -76512,8 +76948,6 @@ var _react = _interopRequireWildcard(require("react"));
 var _BookmarkItem = _interopRequireDefault(require("./BookmarkItem"));
 
 var _FilterBookmarks = _interopRequireDefault(require("./FilterBookmarks"));
-
-var _MessagePopup = _interopRequireDefault(require("./MessagePopup"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -76545,7 +76979,6 @@ function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-// to show user who signed in initially for a few seconds then remove
 function defaultConversionOfName(name) {
   var fullName = name.split(' ');
   return fullName.map(function (word) {
@@ -76559,7 +76992,8 @@ function Profile(_ref) {
   var _useState = (0, _react.useState)(null),
       _useState2 = _slicedToArray(_useState, 2),
       shopList = _useState2[0],
-      setShops = _useState2[1];
+      setShops = _useState2[1]; // this will run immediately when the component mounts and send a request to the backend to get all the bookmarked shops in the database associated with me
+
 
   (0, _react.useEffect)(function () {
     /**
@@ -76583,21 +77017,15 @@ function Profile(_ref) {
             case 5:
               bookmarkedShops = _context.sent;
               setShops(_toConsumableArray(bookmarkedShops));
-              console.log(shopList);
 
-            case 8:
+            case 7:
             case "end":
               return _context.stop();
           }
         }
       }, _callee);
-    }))(); // IIFE
-
-  }, []); // to handle sort changes
-
-  (0, _react.useEffect)(function () {
-    displayBookmarks(); // if the state changes, re-render the shops
-  }, [shopList]); // helper function to remove shop by shop ID and find the user with their ID first
+    }))();
+  }, []); // helper function to remove shop by shop ID and find the user with their ID first
 
   function removeShop(_x) {
     return _removeShop.apply(this, arguments);
@@ -76685,7 +77113,7 @@ function Profile(_ref) {
     className: "container"
   }, /*#__PURE__*/_react.default.createElement("h1", {
     style: {
-      marginTop: "3rem"
+      marginTop: '3rem'
     },
     className: "profile-greeting-h1"
   }, "Hello, ", defaultConversionOfName(userInfo.name)), displayBookmarks());
@@ -76693,7 +77121,7 @@ function Profile(_ref) {
 
 var _default = Profile;
 exports.default = _default;
-},{"react":"node_modules/react/index.js","./BookmarkItem":"components/BookmarkItem.js","./FilterBookmarks":"components/FilterBookmarks.js","./MessagePopup":"components/MessagePopup.js"}],"../node_modules/moment/moment.js":[function(require,module,exports) {
+},{"react":"node_modules/react/index.js","./BookmarkItem":"components/BookmarkItem.js","./FilterBookmarks":"components/FilterBookmarks.js"}],"../node_modules/moment/moment.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 //! moment.js
@@ -82379,12 +82807,12 @@ var _react = _interopRequireDefault(require("react"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function UserDashboardItem(_ref) {
+var UserDashboardItem = function UserDashboardItem(_ref) {
   var usersName = _ref.usersName,
       usersJoinDate = _ref.usersJoinDate,
       usersEmail = _ref.usersEmail;
   return /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement("h3", null, usersName), /*#__PURE__*/_react.default.createElement("p", null, "Member since ", usersJoinDate), /*#__PURE__*/_react.default.createElement("p", null, "email: ", usersEmail));
-}
+};
 
 var _default = UserDashboardItem;
 exports.default = _default;
@@ -82424,7 +82852,7 @@ function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-function Dashboard() {
+var Dashboard = function Dashboard() {
   var _useState = (0, _react.useState)(null),
       _useState2 = _slicedToArray(_useState, 2),
       users = _useState2[0],
@@ -82463,19 +82891,18 @@ function Dashboard() {
       }
 
       return getUsers;
-    })()(); // IIFE
-  }, []); // run once + everytime a new user is added
-
+    })()();
+  }, []);
   return users ? /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement("h1", {
     style: {
-      marginTop: "5rem",
-      textAlign: "center"
+      marginTop: '5rem',
+      textAlign: 'center'
     }
   }, "Analytics Dashboard"), /*#__PURE__*/_react.default.createElement("div", {
     className: "ui raised very padded text container segment"
   }, users && users.map(function (user) {
     // convert to a nice format using moment
-    var date = (0, _moment.default)(user.date.slice(0, 10).split('-').join(''), "YYYYMMDD").format("MMM Do YYYY");
+    var date = (0, _moment.default)(user.date.slice(0, 10).split('-').join(''), 'YYYYMMDD').format('MMM Do YYYY');
     return /*#__PURE__*/_react.default.createElement(_UserDashboardItem.default, {
       usersName: user.name,
       usersJoinDate: date,
@@ -82483,7 +82910,7 @@ function Dashboard() {
       key: user.id
     });
   }))) : null;
-}
+};
 
 var _default = Dashboard;
 exports.default = _default;
@@ -82507,7 +82934,7 @@ function _objectWithoutProperties(source, excluded) { if (source == null) return
 
 function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
 
-function ProtectedRoute(_ref) {
+var ProtectedRoute = function ProtectedRoute(_ref) {
   var Component = _ref.component,
       isAuthenticated = _ref.isAuthenticated,
       rest = _objectWithoutProperties(_ref, ["component", "isAuthenticated"]);
@@ -82524,7 +82951,7 @@ function ProtectedRoute(_ref) {
       });
     }
   }));
-}
+};
 
 var _default = ProtectedRoute;
 exports.default = _default;
@@ -82580,9 +83007,9 @@ function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-function App() {
+var App = function App() {
   var _useState = (0, _react.useState)({
-    role: "guest",
+    role: 'guest',
     // initial is guest so they always see home, find, login and register
     isAuthenticated: false,
     userInformation: {}
@@ -82591,11 +83018,11 @@ function App() {
       state = _useState2[0],
       setState = _useState2[1];
   /**
-   * This is going to act as my 'app level state' for now. I am going to refactor this app to use either context API or 
+   * This is going to act as my 'app level state' for now. I am going to refactor this app to use either context API or
    * is being made. I am using a callback to render the login with props. I would rather use top level wrapper (context or a store in redux)
    * and pass state to every elligible component
-   * 
-   * This will suffice for now - we can see now the profile page needs this paradigm too... i will be converting this app to use Redux 
+   *
+   * This will suffice for now - we can see now the profile page needs this paradigm too... i will be converting this app to use Redux
    */
 
 
@@ -82653,7 +83080,7 @@ function App() {
     component: _Dashboard.default,
     isAuthenticated: state.isAuthenticated
   }))));
-}
+};
 
 var _default = App;
 exports.default = _default;
@@ -82790,7 +83217,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61788" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60897" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

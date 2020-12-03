@@ -1,7 +1,6 @@
 {
   "name": "clubProject",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "client-install": "npm install",
@@ -17,6 +16,7 @@
     "prop-types": "^15.7.2",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
+    "react-onclickoutside": "^6.9.0",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
     "regenerator-runtime": "^0.13.7",
@@ -28,5 +28,6 @@
   ],
   "devDependencies": {
     "sass": "^1.27.0"
-  }
+  },
+  "description": ""
 }

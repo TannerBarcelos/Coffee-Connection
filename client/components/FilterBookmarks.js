@@ -16,21 +16,21 @@ const filterOptions = [
     key: 'Alphabetically',
     text: 'Alphabetically',
     value: 'Alphabetically',
-  }
-]
+  },
+];
 
-function FilterBookmarks({filter}) {
+const FilterBookmarks = ({ filter }) => {
   return (
-  <Dropdown
+    <Dropdown
       className="filterable"
-      placeholder='Select a Filter Method'
+      placeholder="Select a Filter Method"
       fluid
       selection
       options={filterOptions}
-      onChange={e => filter(e.target.textContent)}
-      style={{marginTop: "1.5rem", marginBottom: "2rem"}}
+      onChange={(e) => filter(e.target.textContent)}
+      style={{ marginTop: '1.5rem', marginBottom: '2rem' }}
     />
-  )
-}
+  );
+};
 
 export default FilterBookmarks;

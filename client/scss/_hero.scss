@@ -26,14 +26,15 @@
 
     & .search__link {
       border: none;
-      padding: 0.7rem;
+      padding: 1rem;
       border-radius: 3px;
       margin-top: 2rem;
       background-color: rgb(24, 24, 24);
       text-decoration: none;
       color: #fff;
       display: block;
-      width: 70%;
+      width: 90%;
+      font-size: 1.2rem;
       margin: 2rem auto 0 auto;
 
       &:hover {

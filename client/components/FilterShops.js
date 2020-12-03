@@ -22,20 +22,20 @@ const filterOptions = [
     text: 'By Distance',
     value: 'By Distance',
   },
-]
+];
 
-function FilterShops({filter}) {
+const FilterShops = ({ filter }) => {
   return (
-  <Dropdown
+    <Dropdown
       className="filterable"
-      placeholder='Select a Filter Method'
+      placeholder="Select a Filter Method"
       fluid
       selection
       options={filterOptions}
-      onChange={e => filter(e.target.textContent)}
-      style={{marginTop: "1.5rem", marginBottom: "2rem"}}
+      onChange={(e) => filter(e.target.textContent)}
+      style={{ marginTop: '1.5rem', marginBottom: '2rem' }}
     />
-  )
-}
+  );
+};
 
 export default FilterShops;

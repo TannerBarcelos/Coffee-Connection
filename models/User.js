@@ -6,29 +6,29 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     max: 50,
-    min: 6
+    min: 6,
   },
   email: {
     type: String,
     required: true,
     max: 255,
-    min: 6
-  }, 
-  password : {
+    min: 6,
+  },
+  password: {
     type: String,
     required: true,
     max: 1024,
-    min: 6
+    min: 6,
   },
   role: {
-    type: String
+    type: String,
   },
   // Can contain nested schemas
   bookmarkedShops: [],
   date: {
     type: Date,
-    default: Date.now
-  }
-})
+    default: Date.now,
+  },
+});
 
-module.exports = User = mongoose.model('User', userSchema); // export this schema as a new user model
+module.exports = User = mongoose.model('User', userSchema); // export this schema as a new user model (a model creates a collection of that model in mongoDB)

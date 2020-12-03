@@ -37,17 +37,17 @@
     & input {
       // grab each input element and give them the same uniform style
       margin-bottom: 2rem;
-      &[type="email"],
-      &[type="text"],
-      &[type="select"],
-      &[type="password"] {
+      &[type='email'],
+      &[type='text'],
+      &[type='select'],
+      &[type='password'] {
         border: 1px solid rgb(218, 191, 191);
         border-radius: 10px;
         padding: 0.3rem;
         font-size: 1rem;
       }
 
-      &[type="submit"] {
+      &[type='submit'] {
         // knows how to use these variables because congif is the top level import of the compiled scss club file
         background-color: $nav-container-bg;
         color: #fff;
@@ -75,17 +75,17 @@
       box-shadow: none;
 
       & input {
-        &[type="email"],
-        &[type="text"],
-        &[type="select"],
-        &[type="password"] {
+        &[type='email'],
+        &[type='text'],
+        &[type='select'],
+        &[type='password'] {
           border: none;
           border-bottom: 1px solid rgb(218, 191, 191);
           border-radius: 0px;
           padding: 0.5rem;
           font-size: 1rem;
         }
-        &[type="submit"] {
+        &[type='submit'] {
           width: 100%;
           border-radius: 5px;
           padding: 0.7rem;

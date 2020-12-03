@@ -1,10 +1,10 @@
-@import "utilities"; // styling for the reset
-@import "config"; //default styles and fonts
-@import "nav"; // nav set
-@import "hero"; // hero set
-@import "login"; // login styles
-@import "location"; //location styling
-@import "dialog"; //dialog styles
+@import 'utilities'; // styling for the reset
+@import 'config'; //default styles and fonts
+@import 'nav'; // nav set
+@import 'hero'; // hero set
+@import 'login'; // login styles
+@import 'location'; //location styling
+@import 'dialog'; //dialog styles
 
 * {
   box-sizing: border-box;
@@ -26,7 +26,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-evenly;
-  width: 85%;
+  max-width: 75%;
   margin: 0 auto;
   margin-top: 3rem;
   margin-bottom: 3rem;

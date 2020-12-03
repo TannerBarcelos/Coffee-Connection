@@ -59,14 +59,15 @@
 }
 .hero__image .hero-text .search__link {
   border: none;
-  padding: 0.7rem;
+  padding: 1rem;
   border-radius: 3px;
   margin-top: 2rem;
   background-color: #181818;
   text-decoration: none;
   color: #fff;
   display: block;
-  width: 70%;
+  width: 90%;
+  font-size: 1.2rem;
   margin: 2rem auto 0 auto;
 }
 .hero__image .hero-text .search__link:hover {
@@ -278,7 +279,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-evenly;
-  width: 85%;
+  max-width: 75%;
   margin: 0 auto;
   margin-top: 3rem;
   margin-bottom: 3rem;

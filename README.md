@@ -2,6 +2,8 @@
 
 <hr>
 
+See it [here](https://coffee-connection.herokuapp.com/)
+
 ### About The App
 
 Coffee Connection us a Full-Stack MERN Web Application that brings you closer than ever to cafes near you. Been to a coffee shops and want to remember what it was called? Planning a trip out of town and want to plan out a visit or two to a cafe? Coffee Connection will help!
